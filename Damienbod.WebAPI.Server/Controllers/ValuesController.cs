@@ -4,21 +4,22 @@ using Damienbod.Common;
 
 namespace Damienbod.WebAPI.Server.Controllers
 {
+    [RoutePrefix("api/values")]
     public class ValuesController : ApiController
     {
-        // GET api/values/5
+        [HttpGet]
+        [Route("{id}")]
         public ProtobufModelDto Get(int id)
         {
             return new ProtobufModelDto() { Id = 1, Name = "HelloWorld", StringValue = "My first Protobuf web api service" };
         }
 
-        // GET api/values
+        [HttpGet]
+        [Route("")]
         public IEnumerable<string> Get()
         {
             return new string[] { "value1", "value2" };
         }
-
-
 
         // POST api/values
         public void Post([FromBody]string value)

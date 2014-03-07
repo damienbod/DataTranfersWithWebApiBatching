@@ -56,6 +56,8 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BasicRequestWithProtobuf.cs" />
+    <Compile Include="DefaultBatchWithJsonAndDefaultBatchHandler.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

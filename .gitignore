@@ -1,0 +1,9 @@
+Damienbod.Common/obj
+Damienbod.Common/bin
+Damienbod.WebAPI.Client/bin
+Damienbod.WebAPI.Client/obj
+Damienbod.WebAPI.Server/bin
+Damienbod.WebAPI.Server/obj
+WebAPiProtobuf.v11.suo
+WebAPiProtobuf.v12.suo
+Damienbod.WebAPI.Server/Damienbod.WebAPI.Server.csproj.user

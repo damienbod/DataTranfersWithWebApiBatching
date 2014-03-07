@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Web.Http;
+using System.Web.Http.Batch;
 using WebApiContrib.Formatting;
 
 namespace Damienbod.WebAPI.Server
@@ -10,17 +11,12 @@ namespace Damienbod.WebAPI.Server
     {
         public static void Register(HttpConfiguration config)
         {
-            // Web API configuration and services
+            config.Routes.MapHttpBatchRoute(
+                routeName: "WebApiBatch",
+                routeTemplate: "api/$batch",
+                batchHandler: new DefaultHttpBatchHandler(GlobalConfiguration.DefaultServer));
 
-            // Web API routes
             config.MapHttpAttributeRoutes();
-
-            config.Routes.MapHttpRoute(
-                name: "DefaultApi",
-                routeTemplate: "api/{controller}/{id}",
-                defaults: new { id = RouteParameter.Optional }
-            );
-
             config.Formatters.Add(new ProtoBufFormatter());
         }
     }
