@@ -11,7 +11,9 @@ namespace Damienbod.WebAPI.Client
     {
         static void Main(string[] args)
         {
-            DefaultBatchWithJsonAndDefaultBatchHandler.DoRequest();
+            ProtobufBatch.DoRequest();
+            
+            //DefaultBatchWithJsonAndDefaultBatchHandler.DoRequest();
 
             //BasicRequestWithProtobuf.DoRequest();
 

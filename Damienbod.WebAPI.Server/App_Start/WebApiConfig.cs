@@ -11,10 +11,17 @@ namespace Damienbod.WebAPI.Server
     {
         public static void Register(HttpConfiguration config)
         {
+            //config.Routes.MapHttpBatchRoute(
+            //    routeName: "WebApiBatch",
+            //    routeTemplate: "api/$batch",
+            //    batchHandler: new DefaultHttpBatchHandler(GlobalConfiguration.DefaultServer));
+
             config.Routes.MapHttpBatchRoute(
                 routeName: "WebApiBatch",
                 routeTemplate: "api/$batch",
-                batchHandler: new DefaultHttpBatchHandler(GlobalConfiguration.DefaultServer));
+                batchHandler: new ProtobufBatchHandler(GlobalConfiguration.DefaultServer));
+
+            
 
             config.MapHttpAttributeRoutes();
             config.Formatters.Add(new ProtoBufFormatter());
