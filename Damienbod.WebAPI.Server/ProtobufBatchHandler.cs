@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web.Http;
@@ -14,12 +16,15 @@ namespace Damienbod.WebAPI.Server
     {
         private BatchExecutionOrder _executionOrder;
         private const string MultiPartContentSubtype = "mixed";
+        private const string ApplicationProtobufSupportedContentType = "application/x-protobuf";
 
-        public ProtobufBatchHandler(HttpServer httpServer)
-            : base(httpServer)
+        public ProtobufBatchHandler(HttpServer httpServer) : base(httpServer)
         {
             ExecutionOrder = BatchExecutionOrder.Sequential;
+            SupportedContentTypes = new List<string>{ ApplicationProtobufSupportedContentType, "multipart/protobuf" };
         }
+
+         public IList<string> SupportedContentTypes { get; private set; }
 
         public BatchExecutionOrder ExecutionOrder
         {
@@ -41,10 +46,10 @@ namespace Damienbod.WebAPI.Server
         {
             if (request == null)
             {
-               // throw ArgumentNullException("request");
+               throw new ArgumentNullException("request");
             }
 
-            ////////ValidateRequest(request);
+            ValidateRequest(request);
 
             IList<HttpRequestMessage> subRequests = await ParseBatchRequestsAsync(request, cancellationToken);
 
@@ -67,14 +72,14 @@ namespace Damienbod.WebAPI.Server
         {
             if (responses == null)
             {
-               // TODO  throw Error.ArgumentNull("responses");
+               throw new ArgumentNullException("responses");
             }
             if (request == null)
             {
-               // TODO throw Error.ArgumentNull("request");
+                throw new ArgumentNullException("request");
             }
 
-            MultipartContent batchContent = new MultipartContent(MultiPartContentSubtype);
+            var batchContent = new MultipartContent(MultiPartContentSubtype);
 
             foreach (HttpResponseMessage batchResponse in responses)
             {
@@ -91,10 +96,10 @@ namespace Damienbod.WebAPI.Server
         {
             if (requests == null)
             {
-                //throw Error.ArgumentNull("requests");
+                throw new ArgumentNullException("requests");
             }
 
-            List<HttpResponseMessage> responses = new List<HttpResponseMessage>();
+            var responses = new List<HttpResponseMessage>();
 
             try
             {
@@ -103,7 +108,7 @@ namespace Damienbod.WebAPI.Server
                     case BatchExecutionOrder.Sequential:
                         foreach (HttpRequestMessage request in requests)
                         {
-                            request.Headers.Add("Accept", "application/x-protobuf");
+                            request.Headers.Add("Accept", ApplicationProtobufSupportedContentType);
                             responses.Add(await Invoker.SendAsync(request, cancellationToken));
                         }
                         break;
@@ -134,16 +139,16 @@ namespace Damienbod.WebAPI.Server
         {
             if (request == null)
             {
-                // TODO throw Error.ArgumentNull("request");
+                throw new ArgumentNullException("request");
             }
 
-            List<HttpRequestMessage> requests = new List<HttpRequestMessage>();
+            var requests = new List<HttpRequestMessage>();
             cancellationToken.ThrowIfCancellationRequested();
-            MultipartStreamProvider streamProvider = await request.Content.ReadAsMultipartAsync();
+            MultipartStreamProvider streamProvider = await request.Content.ReadAsMultipartAsync(cancellationToken);
             foreach (HttpContent httpContent in streamProvider.Contents)
             {
                 cancellationToken.ThrowIfCancellationRequested();
-                HttpRequestMessage innerRequest = await httpContent.ReadAsHttpRequestMessageAsync();
+                HttpRequestMessage innerRequest = await httpContent.ReadAsHttpRequestMessageAsync(cancellationToken);
                 innerRequest.CopyBatchRequestProperties(request);
                 requests.Add(innerRequest);
             }
@@ -152,7 +157,28 @@ namespace Damienbod.WebAPI.Server
 
         private void ValidateRequest(HttpRequestMessage request)
         {
-            // TODO throw new NotImplementedException();
+            if (request == null)
+            {
+                throw new ArgumentNullException("request");
+            }
+
+            if (request.Content == null)
+            {
+                throw new HttpResponseException(request.CreateErrorResponse(
+                    HttpStatusCode.BadRequest, "BatchRequestMissingContent"));
+            }
+
+            MediaTypeHeaderValue contentType = request.Content.Headers.ContentType;
+            if (contentType == null)
+            {
+                throw new HttpResponseException(request.CreateErrorResponse(
+                    HttpStatusCode.BadRequest,  "BatchContentTypeMissing"));
+            }
+
+            if (!SupportedContentTypes.Contains(contentType.MediaType, StringComparer.OrdinalIgnoreCase))
+            {
+                throw new HttpResponseException(request.CreateErrorResponse( HttpStatusCode.BadRequest, string.Format("BatchMediaTypeNotSupported")));
+            }
         }
     }
 }

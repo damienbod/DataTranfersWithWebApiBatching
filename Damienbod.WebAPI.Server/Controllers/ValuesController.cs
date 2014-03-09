@@ -16,24 +16,31 @@ namespace Damienbod.WebAPI.Server.Controllers
 
         [HttpGet]
         [Route("")]
-        public IEnumerable<string> Get()
+        public IEnumerable<ProtobufModelDto> Get()
         {
-            return new string[] { "value1", "value2" };
+            return new ProtobufModelDto[] { new ProtobufModelDto() { Id = 1, Name = "HelloWorld", StringValue = "My first Protobuf web api service" } };
         }
 
-        // POST api/values
-        public void Post([FromBody]string value)
+        [HttpPost]
+        [Route("")]
+        public void Post([FromBody]ProtobufModelDto value)
         {
+            var objectToDelete = value;
         }
 
-        // PUT api/values/5
-        public void Put(int id, [FromBody]string value)
+        [HttpPut]
+        [Route("{id}")]
+        public void Put(int id, [FromBody]ProtobufModelDto value)
         {
+            var objectToDelete = value;
+            var idOfDtoToDelete = id;
         }
 
-        // DELETE api/values/5
+        [HttpDelete]
+        [Route("{id}")]
         public void Delete(int id)
         {
+            var idOfDtoToDelete = id;
         }
     }
 }

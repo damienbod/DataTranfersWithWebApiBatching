@@ -1,10 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+using System.Net;
 using System.Net.Http;
-using System.Net.Http.Formatting;
-using System.Text;
-using System.Threading.Tasks;
 using Damienbod.Common;
 using WebApiContrib.Formatting;
 
@@ -18,21 +14,21 @@ namespace Damienbod.WebAPI.Client
             var client = new HttpClient();
             var batchRequest = new HttpRequestMessage(HttpMethod.Post, baseAddress + "/api/$batch")
             {
-                Content = new MultipartContent("mixed")
+                Content = new MultipartContent("protobuf")
                 {
-                    // POST http://localhost:55722/api/values
-                    //new HttpMessageContent(new HttpRequestMessage(HttpMethod.Post, baseAddress + "/api/values")
-                    //{
-                    //    Content = new ObjectContent<string>("my value", new JsonMediaTypeFormatter())
-                    //}),
+                    new HttpMessageContent(new HttpRequestMessage(HttpMethod.Post, baseAddress + "/api/values")
+                    {
+                        Content = new ObjectContent<ProtobufModelDto>(new ProtobufModelDto() { Id = 56, Name = "ClientObjectToCreate", StringValue = "Protobuf object sent in a batch" }, new ProtoBufFormatter())
+                    }),
 
-                    // GET http://localhost:55722/api/values
                     new HttpMessageContent(new HttpRequestMessage(HttpMethod.Get, baseAddress + "/api/values/2")),
 
-                    // GET http://localhost:55722/api/values
-                    new HttpMessageContent(new HttpRequestMessage(HttpMethod.Get, baseAddress + "/api/values/3")),
+                     new HttpMessageContent(new HttpRequestMessage(HttpMethod.Put, baseAddress + "/api/values/7")
+                    {
+                        Content = new ObjectContent<ProtobufModelDto>(new ProtobufModelDto() { Id = 56, Name = "ClientObjectToCreate", StringValue = "Protobuf object sent in a batch" }, new ProtoBufFormatter())
+                    }),
 
-                    // GET http://localhost:55722/api/values
+                    new HttpMessageContent(new HttpRequestMessage(HttpMethod.Delete, baseAddress + "/api/values/3")),
                     new HttpMessageContent(new HttpRequestMessage(HttpMethod.Get, baseAddress + "/api/values/4"))
                 }
             };
@@ -43,13 +39,19 @@ namespace Damienbod.WebAPI.Client
             foreach (var content in streamProvider.Contents)
             {
                 HttpResponseMessage response = content.ReadAsHttpResponseMessageAsync().Result;
-
-                // Do something with the response messages
                 if (response.IsSuccessStatusCode)
                 {
-                    // Parse the response body. Blocking!
-                    var p = response.Content.ReadAsAsync<ProtobufModelDto>(new[] { new ProtoBufFormatter() }).Result;
-                    Console.WriteLine("{0}\t{1};\t{2}", p.Name, p.StringValue, p.Id);
+                    if (response.StatusCode == HttpStatusCode.NoContent)
+                    {
+                        Console.WriteLine("delete, post or update ok");
+                    }
+                    else
+                    {
+                        // Parse the response body. Blocking!
+                        var p = response.Content.ReadAsAsync<ProtobufModelDto>(new[] { new ProtoBufFormatter() }).Result;
+                        Console.WriteLine("{0}\t{1};\t{2}", p.Name, p.StringValue, p.Id);
+                    }
+                    
                 }
             }
         }
